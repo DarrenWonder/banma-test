@@ -1,5 +1,12 @@
 <template>
   <scroll ref="scroll">
+    <template slot="pullDown" scope="props">
+      <div class="pulldown-container">
+        <span v-if="props.pullDownStatus === 'default' || props.pullDownStatus === 'down'">⬇️</span>
+        <span v-if="props.pullDownStatus === 'up'">⬆️</span>
+        <span v-if="props.pullDownStatus === 'load'">🕐</span>
+      </div>
+    </template>
     <ul>
       <li v-for="p in products" :key="p.id">{{ p.title }}</li>
     </ul>

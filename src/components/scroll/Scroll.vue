@@ -1,23 +1,18 @@
 <template>
   <div class="scroll-wrapper" :style="styles">
     <div class="scroller">
-      <slot name="pullDown" >
-        <div class="pulldown-container">{{ content.pullDown }}</div>
+      <slot name="pullDown" :pullDownStatus="pullDownStatus">
+        <div class="pulldown-container">{{ pullDownConfig[pullDownStatus+'Content'] }}</div>
       </slot>
       <slot></slot>
-      <slot name="pullUp" >
-        <div class="pullup-container">{{ content.pullUp }}</div>
+      <slot name="pullUp" :pullUpStatus = "pullUpStatus" >
+        <div class="pullup-container">{{ pullUpConfig[pullUpStatus+'Content'] }}</div>
       </slot>
     </div>
   </div>
 </template>
 <script>
-  const status = {
-    DEFAULT: Symbol('DEFAULT'),
-    WAIT: Symbol('WAIT'),
-    LOADING: Symbol('LOADING')
-  };
-  import IScroll from 'iscroll/build/iscroll-probe';
+  import IScroll from './iscroll';
   export default {
     props: {
       options: {
@@ -28,12 +23,34 @@
             interactiveScrollbars: true,
             shrinkScrollbars: 'scale',
             fadeScrollbars: true,
-            probeType: 3
+            probeType: 2
           };
         }
       },
       height: {
         type: String
+      },
+      pullDownConfig: {
+        type: Object,
+        default() {
+          return {
+            defaultContent: '下拉刷新',
+            downContent: '下拉刷新',
+            upContent: '释放开始刷新',
+            loadContent: '正在刷新'
+          };
+        }
+      },
+      pullUpConfig: {
+        type: Object,
+        default() {
+          return {
+            defaultContent: '上拉加载',
+            downContent: '上拉加载',
+            upContent: '释放开始加载',
+            loadContent: '正在加载'
+          };
+        }
       }
     },
     data() {
@@ -41,11 +58,8 @@
         styles: {
           height: this.height || '100%'
         },
-        content: {
-          pullDown: '下拉刷新',
-          pullUp: '上拉加载'
-        },
-        status: status
+        pullDownStatus: 'default',
+        pullUpStatus: 'default'
       };
     },
     methods: {
@@ -54,18 +68,37 @@
       }
     },
     mounted() {
+      const $vm = this;
+      let maxY;
       this.iscroll = new IScroll('.scroll-wrapper', this.options);
       this.iscroll.on('scroll', function() {
-        if (this.y > 60) {
+        maxY = this.maxScrollY;
+        if (this.y > 5 && this.y < 60) {
+          $vm.pullDownStatus = 'down';
+        } else if (this.y >= 60) {
+          $vm.pullDownStatus = 'up';
+        } else if ((this.y < maxY - 5) && (this.y > maxY - 60)) {
+          $vm.pullUpStatus = 'down';
+        } else if (this.y <= maxY - 60) {
+          $vm.pullUpStatus = 'up';
         }
       });
-      this.iscroll.on('scrollEnd', function() {
-        console.log(this);
-        if (this.y > 60) {
-
-          this.enabled = false;
+      this.iscroll.on('touchEnd', function() {
+        if (this.y >= 60) {
+          this.expandTo(0, 60);
+          $vm.pullDownStatus = 'load';
           setTimeout(() => {
-            this.enabled = true;
+            $vm.pullUpStatus = 'default';
+            this.reset();
+          }, 2000);
+        } else if (this.y < 60 && this.y > 5) {
+          $vm.pullUpStatus = 'default';
+        } else if (this.y <= maxY - 60) {
+          this.expandTo(0, maxY - 60);
+          $vm.pullUpStatus = 'load';
+          setTimeout(() => {
+            $vm.pullUpStatus = 'default';
+            this.reset();
           }, 2000);
         }
       });
@@ -99,6 +132,7 @@
     text-size-adjust: none;
     background: #ccc;
     overflow: hidden;
+    position: relative;
   }
   .scroller {
     position: relative;
@@ -107,8 +141,13 @@
     transform: translateZ(0);
   }
   .pulldown-container, .pullup-container {
+    position: absolute;
+    width: 100%;
     text-align: center;
     height: 60px;
     line-height: 60px;
+  }
+  .pulldown-container {
+    top: -60px;
   }
 </style>

@@ -1,5 +1,6 @@
 import Vue from 'vue';
 import Main from './AppMain';
+import '@/styles/_main.scss';
 // import App from './app';
 // import mdCore from './components/core';
 import router from './router';

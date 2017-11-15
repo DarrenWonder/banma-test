@@ -20,7 +20,7 @@ cooking.set({
   minimize: true,
   chunk: true, // see https://cookingjs.github.io/zh-cn/configuration.html#chunk
   postcss: [
-    // require('...')
+     require('postcss-bem')
   ],
   publicPath: '/dist/',
   assetsPath: 'static',
@@ -30,7 +30,7 @@ cooking.set({
   alias: {
     '@': path.join(__dirname, 'src')
   },
-  extends: ['vue2', 'lint', 'saladcss']
+  extends: ['vue2', 'lint', 'saladcss', 'sass']
 });
 
 module.exports = cooking.resolve();
