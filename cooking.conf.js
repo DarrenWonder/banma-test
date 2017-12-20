@@ -1,6 +1,6 @@
 var path = require('path');
 var cooking = require('cooking');
-
+111
 cooking.set({
   entry: {
     app: ['babel-polyfill', './src/main.js']
